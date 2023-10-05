@@ -1,0 +1,495 @@
+Practical No: 1
+
+Aim: Setup DirectX 11, Windows Framework and Initialize Direct3D Device, Loading models into DirectX 11 and rendering.
+
+Practical:
+
+Open Visual Studio 2010 and create a “New Project”. Create a Windows Forms Application using .NET Framework 2.0 (Make sure to tick the checkbox of “Create directory for solution” in the bottom right corner)
+
+
+Download the 3 “.dll” files and add them as references in the Solution Explorer window in the right-hand side corner
+
+
+Now in the Reference Manager, go to browse and add all 3 “.dll” files
+
+Go to Build > Configuration Manager and in Active Solution Platform, select x86
+
+Right click on your Form design, and select “View Code”
+
+Write the following code
+Form1.cs
+using System;
+using System.Collections.Generic; using System.ComponentModel; using System.Data;
+using System.Drawing; using System.Text;
+using System.Windows.Forms; using System.IO;
+using Microsoft.DirectX;
+using Microsoft.DirectX.Direct3D;
+
+namespace Practical1
+{
+public partial class Form1 : Form
+{
+private Device device;
+
+private PresentParameters pres; private Mesh mesh;
+private Material[] materials; private Texture[] textures;
+
+public Form1()
+{
+InitializeComponent();
+}
+private void Form1_Load(object sender, EventArgs e)
+{
+}
+public bool InitializeGraphics()
+{
+pres = new PresentParameters(); pres.Windowed = true;
+pres.SwapEffect = SwapEffect.Discard; pres.EnableAutoDepthStencil = true; pres.AutoDepthStencilFormat = DepthFormat.D16; device = new Device(0, DeviceType.Hardware, this,
+CreateFlags.SoftwareVertexProcessing, pres); device.RenderState.CullMode = Cull.None; CreateMesh(@"airplane 2.x");
+return true;
+}
+public void CreateMesh(string path)
+{
+ExtendedMaterial[] exMaterials;
+mesh = Mesh.FromFile(path, MeshFlags.SystemMemory, device, out exMaterials);
+if (textures != null)
+{
+DisposeTextures();
+}
+textures = new Texture[exMaterials.Length]; materials = new Material[exMaterials.Length]; for (int i = 0; i < exMaterials.Length; ++i)
+{
+if (exMaterials[i].TextureFilename != null)
+{
+string texturePath = Path.Combine(Path.GetDirectoryName(path), exMaterials[i].TextureFilename);
+textures[i] = TextureLoader.FromFile(device, texturePath);
+}
+materials[i] = exMaterials[i].Material3D; materials[i].Ambient = materials[i].Diffuse;
+}
+}
+public void DisposeTextures()
+{
+if (textures == null)
+{
+return;
+}
+foreach (Texture t in textures)
+{
+if (t != null)
+{
+t.Dispose();
+}
+}
+}
+
+public void SetupMatrices()
+{
+float yaw = Environment.TickCount / 500.0F; float pitch = Environment.TickCount / 500.0F;
+device.Transform.World = Matrix.RotationYawPitchRoll(yaw, pitch, 0); device.Transform.View = Matrix.LookAtLH(new Vector3(0, 0, -6), new
+Vector3(0, 0, 0), new Vector3(0, 1, 0));
+device.Transform.Projection = Matrix.PerspectiveFovLH((float)Math.PI / 2.0F, 1.0F, 1.0F, 10.0F);
+}
+public void SetupLights()
+{
+device.RenderState.Lighting = true; device.Lights[0].Diffuse = Color.White; device.Lights[0].Specular = Color.White; device.Lights[0].Type = LightType.Directional; device.Lights[0].Direction = new Vector3(-1, -1, 3); device.Lights[0].Enabled = true;
+device.RenderState.Ambient = Color.FromArgb(0x00, 0x00, 0x00);
+}
+public void RenderMesh()
+{
+for (int i = 0; i < materials.Length; ++i)
+{
+if (textures[i] != null)
+{
+device.SetTexture(0, textures[i]);
+}
+device.Material = materials[i]; mesh.DrawSubset(i);
+}
+}
+public void Render()
+{
+device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.LightSkyBlue, 1.0F, 0);
+device.BeginScene(); SetupMatrices(); SetupLights(); RenderMesh(); device.EndScene(); device.Present();
+}
+public void DisposeGraphics()
+{
+DisposeTextures(); device.Dispose();
+}
+}
+}
+
+Now from the Solution Explorer, open Program.cs file & write the following code
+Program.cs :
+using System;
+using System.Collections.Generic; using System.Windows.Forms;
+
+namespace Practical1
+{
+static class Program
+
+{
+/// <summary>
+/// The main entry point for the application.
+/// </summary> [STAThread]
+static void Main()
+{
+Form1 app = new Form1(); app.Width = 800;
+app.Height = 600; app.InitializeGraphics(); app.Show();
+while (app.Created)
+{
+app.Render(); Application.DoEvents();
+}
+app.DisposeGraphics();
+}
+}
+}
+
+Download DirectX SDK for June 10, this will not only allow our DirectX module to function but also contain the airplane texture
+(https://www.microsoft.com/en-in/download/confirmation.aspx?id=6812)
+
+
+After successful download, install the software and go the following location and copy these 3 airplane files
+(C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Samples\Media\Airplane)
+
+To attach textures for our project, download the airplane textures and go to the path where you have saved your project and paste the above copied airplane files
+C:\Users\Amisha\Documents\Visual Studio2010\Projects\Practical1\Practical1\bin\Debug
+
+Open “Exception Setting, by pressing “CTRL+ALT+E”
+On opening, search for an exception called “LoaderLock” and uncheck it. This will prevent the exception from popping up during debugging.
+
+
+Run the program and see the output
+
+
+
+Practical No: 2
+
+Aim: Learn Basic Game Designing Techniques with pygame.
+
+Practical: A) Basic Game Design Techniques:
+Simple pygame example
+Pygame with adding image
+Pygame with text & font
+Pygame sprite & collision detection
+
+Installing “pygame” module :
+
+1. Simple pygame example Input:
+import pygame pygame.init()
+screen = pygame.display.set_mode((400,500)) done = False
+while not done:
+for event in pygame.event.get(): if event.type == pygame.QUIT:
+done = True pygame.display.flip()
+Output :
+
+
+
+
+
+
+Pygame with adding image: Input:
+import pygame pygame.init()
+white = (255,255,255)
+height = 612
+width = 411
+display_surface = pygame.display.set_mode((height, width)) pygame.display.set_caption('Image')
+image = pygame.image.load(r'C:\TYCS_739_746\GP\P2\img.jpg') while True:
+display_surface.fill(white) display_surface.blit(image,(0,0))
+for event in pygame.event.get(): if event.type == pygame.QUIT:
+pygame.quit()
+quit() pygame.display.update()
+
+Output :
+
+
+Pygame with text & font Input :
+import pygame pygame.init()
+screen = pygame.display.set_mode((550,250)) done = False
+
+font = pygame.font.SysFont("Times New Roman",28) text = font.render("Hello, Pygame. Performed by 739 & 746",True,(158,16,16))
+while not done:
+for event in pygame.event.get(): if event.type == pygame.QUIT:
+done = True
+if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+done == True screen.fill((255,255,255))
+screen.blit(text,(300-text.get_width() // 2,60-text.get_height() //
+2))
+pygame.display.flip()
+
+Output :
+
+
+
+Pygame sprite & collision detection Input :
+import pygame import sys
+class Sprite(pygame.sprite.Sprite): def init (self,pos):
+pygame.sprite.Sprite. init (self) self.image = pygame.Surface([20,20]) self.image.fill((255,0,255)) self.rect = self.image.get_rect() self.rect.center = pos
+def main():
+pygame.init()
+clock = pygame.time.Clock() fps = 50
+bg = [0,0,0]
+size = [300,300]
+screen = pygame.display.set_mode(size) player = Sprite([40,50])
+player.move = [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]
+player.vx = 5
+player.vy = 5
+
+wall = Sprite([100,60])
+
+wall_group = pygame.sprite.Group() wall_group.add(wall)
+
+player_group = pygame.sprite.Group() player_group.add(player)
+
+while True:
+for event in pygame.event.get(): if event.type == pygame.QUIT:
+return False
+key = pygame.key.get_pressed() for i in range(2):
+if key[player.move[i]]:
+player.rect.x += player.vx * [-1,1][i]
+
+for i in range(2):
+if key[player.move[2:4][i]]:
+
+player.rect.y += player.vy * [-1,1][i] screen.fill(bg)
+hit = pygame.sprite.spritecollide(player,wall_group,True) if hit:
+player.image.fill((255,255,255)) player_group.draw(screen) wall_group.draw(screen) pygame.display.update() clock.tick(fps)
+pygame.quit() sys.exit
+if name ==' main ': main()
+
+Output :
+
+
+Practical No: 3
+
+Aim: Develop Snake Game using pygame
+
+Practical:
+Input:
+import pygame import time import random snake_speed = 15
+window_x = 720
+window_y = 480
+black = pygame.Color(0,0,0) white = pygame.Color(255,255,255) red = pygame.Color(255,0,0) green = pygame.Color(0,255,0) blue = pygame.Color(0,0,255)
+
+pygame.init() pygame.display.set_caption("Magic Snake Game")
+game_window = pygame.display.set_mode((window_x , window_y)) fps = pygame.time.Clock()
+snake_position = [100,50]
+snake_body = [[100,50], [90,50], [80,50], [70,50]]
+
+fruit_position = [random.randrange(1, (window_x//10))*10, random.randrange(1, (window_y//10))*10]
+fruit_spawn = True direction = "RIGHT" change_to = direction score = 0
+
+def show_score(choice,color,font,size): score_font = pygame.font.SysFont(font,size)
+score_surface = score_font.render("Score of 732 & 738: " + str(score),True,color)
+score_rect = score_surface.get_rect() game_window.blit(score_surface,score_rect)
+
+def game_over():
+my_font = pygame.font.SysFont("Times New Roman",50)
+
+game_over_surface = my_font.render("Your Score is : " + str(score),True,red)
+game_over_rect = game_over_surface.get_rect() game_over_rect.midtop = (window_x/2 , window_y/4) game_window.blit(game_over_surface, game_over_rect) pygame.display.flip()
+time.sleep(2) pygame.quit() quit()
+
+while True:
+for event in pygame.event.get():
+if event.type == pygame.KEYDOWN: if event.key == pygame.K_UP:
+change_to = "UP"
+if event.key == pygame.K_DOWN: change_to = "DOWN"
+if event.key == pygame.K_LEFT: change_to = "LEFT"
+if event.key == pygame.K_RIGHT: change_to = "RIGHT"
+
+if change_to == "UP" and direction != "DOWN": direction = "UP"
+if change_to == "DOWN" and direction != "UP": direction = "DOWN"
+if change_to == "LEFT" and direction != "RIGHT": direction = "LEFT"
+if change_to == "RIGHT" and direction != "LEFT": direction = "RIGHT"
+
+if direction == "UP": snake_position[1] -= 10
+if direction == "DOWN": snake_position[1] += 10
+if direction == "LEFT": snake_position[0] -= 10
+if direction == "RIGHT": snake_position[0] += 10
+
+snake_body.insert(0, list(snake_position))
+if snake_position[0] == fruit_position[0] and snake_position[1] == fruit_position[1]:
+
+score += 10 fruit_spawn = False
+else:
+snake_body.pop() if not fruit_spawn:
+fruit_position = [random.randrange(1, (window_x//10)) * 10, random.randrange(1, (window_y//10)) * 10]
+fruit_spawn = True game_window.fill(black)
+
+for pos in snake_body: pygame.draw.rect(game_window, green,
+pygame.Rect(pos[0],pos[1],10,10))
+pygame.draw.rect(game_window, white, pygame.Rect(fruit_position[0], fruit_position[1],10,10))
+
+if snake_position[0] < 0 or snake_position[0] > window_x-10: game_over()
+if snake_position[1] < 0 or snake_position[1] > window_y-10: game_over()
+
+for block in snake_body[1:]:
+if snake_position[0] == block[0] and snake_position[1] == block[1]:
+game_over()
+
+show_score(1,white,"Times New Roman",20) pygame.display.update() fps.tick(snake_speed)
+
+Output:
+
+
+
+
+
+
+
+
+Practical No : 4
+
+Aim : Creating 2D Infinite Scrolling Background.
+
+Practical :
+
+Output :
+
+
+
+Practical No : 5
+
+Aim : Create Camera Shake Effect in Unity.
+
+Practical :
+Drag and drop three sprites from assess tab
+
+
+Now inside the MainCamera’s inspector tab, click on ‘Add Component’ & create a new script named ‘CamShake’
+
+
+Double tap the CamShake script, this will open Visual Studio Code for writing the script. Add the following code
+
+
+Now inside the MainCamera’s inspector tab, under the CamShake script, drag & drop the MainCamera inside ‘Cam Transform’ & provide all other values
+
+
+Now click on Play button and see your output
+
+Practical No : 6
+
+Aim : Create Snowfall Particle effect in Unity.
+
+Practical :
+Create a new 3D project
+Click on GameObject -> Create Empty
+
+Rename to ‘Snowfall’
+
+Click on Component -> Effects -> Particle System
+
+Manipulate it’s “Emission” , “Shape” and “SnowFall” properties
+
+
+
+
+In the Inspector tab, under “Renderer”, select “Material” as “Default Particle”
+
+Change the x-axis rotation to 90
+
+Add a background from asset store
+
+Adjust your Main Camera
+
+Output
+
+Practical No : 7
+
+Aim : Design and Animate Game Character in Unity.
+
+Practical :
+Add the model and animation into the “Asset” tab using file explorer
+
+Click the model asset & extract the Textures and Materials from the file explorer
+
+Next, select the Rig tab, Here, select “Humanoid” and choose “Create from this model” and press Apply
+
+
+From the animation inspector, go to “Rig” and again select “Humanoid” and here select “Copy from Other Avatar” as well as select the Model avatar which would have been created upon clicking “Apply” in the above step
+
+
+In the “Animation” tab of Animation, select “Loop Time” to make endless animation and modify other properties according to your liking
+
+
+Create a Timeline tab from the “Window” > “Sequencing” tab and drag and drop the Avatar(from the scene hierarchy) on the left side as well as drag and drop the animation motion (from the Project tab containing assets)
+
+
+Now press play to see Animation play / Output
+
+
+Practical No: 8
+
+Aim : Create Intelligent enemies in Unity.
+
+Practical :
+From the assets store, download & import these two assets in your project
+
+Create a 2D plane & drag and drop your character into the Hierarchy tab from the assets in the Project tab
+
+
+Create an 3D object as an enemy
+
+Right click inside the Project tab, assets section -> Create -> Material, name it as enemy & provide color to it from the inspector tab. After that drag and drop the enemy material onto the ‘Capsule’ under the Hierarchy tab to apply same color to our Capsule(enemy)
+
+
+Now click on Plane in the Hierarchy tab, the click on service > explore > all > AI Navigation, & install it
+
+
+Under the Hierarchy tab, select plane, then right click on empty place > AI > select NavMesh Surface & NavMesh Link
+
+Inside enemy’s inspector tab, click on ‘Add Components’ > search for ‘Nav Mesh Agent’ to add movement as well as enemy movement
+
+
+Change the speed & stopping distance to 2 & 2.5
+
+Under the Project tab, in the assets section, right click > create > c# script & change its name to ‘EnemyController’
+
+
+Write down the script for Enemy
+
+Enemy.cs
+using System.Collections;
+using System.Collections.Generic; using UnityEngine;
+using UnityEngine.AI;
+
+public class EnemyMovement : MonoBehaviour
+{
+public Transform playerObj;
+protected NavMeshAgent enemyMesh;
+
+void Start()
+{
+enemyMesh = GetComponent();
+}
+
+void Update()
+{
+enemyMesh.SetDestination(playerObj.position);
+}
+}
+Drag & drop Enemy..cs into Enemy component inside project tab
+
+Write down the script for Player
+
+Player.cs
+using System.Collections;
+using System.Collections.Generic; using UnityEngine;
+
+public class PlayerMovement : MonoBehaviour
+{
+public float speed = 6.0f; void Update()
+{
+float horizontalInput = Input.GetAxis("Horizontal"); float verticalInput = Input.GetAxis("Vertical");
+
+Vector3 movementDirection = new Vector3(horizontalInput, 0.0f, verticalInput);
+
+movementDirection *= speed; transform.Translate(movementDirection * Time.deltaTime);
+}
+}
+
+Drag & drop PlayerMovement.cs script file into Player component under the Hierarchy tab, similarly drag & drop the Player component into the Player Obj of inspector tab of the enemy
+
+
+Output:
+
+After running the program, the enemy will immediately chase the player
+
